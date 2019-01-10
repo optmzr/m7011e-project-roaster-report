@@ -1,0 +1,196 @@
+%!TEX TS-program = xelatex
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{dirtree}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{csvsimple}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[margin=0.8in]{geometry}
+\usepackage{float}
+\usepackage{subfig}
+\usepackage{listings}
+\usepackage{upgreek}
+\usepackage[american]{circuitikz}
+\usepackage[titletoc,title]{appendix}
+\usepackage{amssymb}
+\usepackage{array,etoolbox}
+\usepackage[parfill]{parskip}
+\usepackage{pgfplots}
+\pgfplotsset{width=10cm,compat=1.9} 
+\usepgfplotslibrary{external}
+\tikzexternalize 
+
+\preto\tabular{\setcounter{magicrownumbers}{0}}
+\newcounter{magicrownumbers}
+\newcommand\rownumber{\stepcounter{magicrownumbers}\arabic{magicrownumbers}}
+\newcommand{\ruler}{\noindent\rule{\textwidth}{1pt}}
+
+% Standard colors for the code syntax highlighting.
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+
+\def\doubleunderline#1{\underline{\underline{#1}}}
+\newcommand{\doubleindent}{\indent \indent}
+
+% Define Y colymntype
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% Header for each page (except first)
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\authors}
+\fancyhead[RE,LO]{\coursecode}
+\fancyfoot[L,RO]{\thepage}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{ 
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}; should come as last argument
+  basicstyle=\footnotesize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=C,                 % the language of the code
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=4,	                   % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
+
+% Group name
+\newcommand{\groupname}{Group}
+
+% Define author information
+\newcommand{\authors}{Philip Hjortsberg, William Wennerström}
+\newcommand{\authorsinfo}{
+    \underline{\groupname{}:} \\ \\
+    Philip Hjortsberg* \thanks{*E-post: \texttt{phihjo-2@student.ltu.se} PN: \@\texttt{920331-3250}} \\
+    William Wennerström$\dagger$ \thanks{$\dagger$E-post: \texttt{wenwil-5@student.ltu.se} PN: \@\texttt{960423-3131}}
+}
+
+% Define course information
+\newcommand{\coursename}{Design of Dynamic Web Systems}
+\newcommand{\coursecode}{M7011E}
+
+% Define project name
+\newcommand{\projectname}{Project Roaster}
+
+% Define information about the school/university
+\newcommand{\schoolinfo}{Department of Computer Science, \\
+                         Electrical and Space Engineering \\
+                         \bigskip{}
+                         Luleå University of Technology \\
+                         Luleå, Sweden
+}
+
+\title{
+    \coursecode{} \\
+    \coursename{} \\
+    \vspace{2em}
+    \textbf{\projectname{}} \break
+    \author{
+        \authorsinfo{}
+    } \break{}
+    \schoolinfo{}}
+\renewcommand\footnotemark{}
+    \date{\today}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+\section{The problem}
+The problem that we're trying to solve 
+\section{System design}
+\section{System architecture}
+\section{Application Programming Interface}
+\section{Technology choices}
+\section{Description of software parts and interaction between them}
+\section{Security considerations}
+\section{References to material}
+\section{Deployment and installation instructions}
+\section{Discussion}
+\section{Future work}
+
+
+% Here follows some good to have examples.
+\if false
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=6cm]{xxx.png}
+    \caption{Lalalala.}
+    \label{fig:my_label}
+\end{figure}
+
+\begin{verbatim}
+PaymentTest > entitledFullAmount[ID: 505] FAILED
+    java.lang.AssertionError: expected:<4960> but was:<5960>
+        at org.junit.Assert.fail(Assert.java:88)
+        at org.junit.Assert.failNotEquals(Assert.java:834)
+        at org.junit.Assert.assertEquals(Assert.java:645)
+        at org.junit.Assert.assertEquals(Assert.java:631)
+        at PaymentTest.entitledFullAmount(PaymentTest.java:164)
+\end{verbatim}
+
+\begin{table}[H]
+\centering
+\caption{API endpoints and their methods}
+\begin{tabular}{|clcl|}
+\hline
+\textbf{Method}              & \textbf{Endpoint}                             & \textbf{Access}              & \textbf{Description}                 \\ \hline
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/}                        & \multicolumn{1}{c|}{N/A}     & Home page                            \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/login}                   & \multicolumn{1}{c|}{N/A}     & View customer login page                      \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/login}                   & \multicolumn{1}{c|}{N/A}     & Login customer user                           \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/register}                & \multicolumn{1}{c|}{N/A}     & View customer register page                   \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/register}                & \multicolumn{1}{c|}{N/A}     & Register customer user                        \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/user}                    & \multicolumn{1}{c|}{C, W, A} & View user page                       \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/user}                    & \multicolumn{1}{c|}{C, W, A} & Set user information                 \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/article?id=\{0..n\}}     & \multicolumn{1}{c|}{C, W, A} & Get specific article by ID           \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/cart}                    & \multicolumn{1}{c|}{C}       & Add artice to cart                   \\
+\multicolumn{1}{|l|}{DELETE} & \multicolumn{1}{l|}{/cart?pos=\{0..n\}}       & \multicolumn{1}{c|}{C}       & Delete article from cart by position \\
+\multicolumn{1}{|l|}{DELETE} & \multicolumn{1}{l|}{/cart}                    & \multicolumn{1}{c|}{C}       & Delete whole cart                    \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/cart}                    & \multicolumn{1}{c|}{C}       & View cart                            \\
+\multicolumn{1}{|c|}{PUT}    & \multicolumn{1}{l|}{/cart}                    & \multicolumn{1}{c|}{C}       & Order items in cart                  \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/order}                   & \multicolumn{1}{c|}{W, A}    & View current orders                  \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/order?id=\{0..n\}}       & \multicolumn{1}{c|}{W, A}    & View order by ID                     \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/warehouse}               & \multicolumn{1}{c|}{W}       & Warehouse user home page             \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/admin}                   & \multicolumn{1}{c|}{A}       & Admin user home page                 \\
+\multicolumn{1}{|c|}{PUT}    & \multicolumn{1}{l|}{/order?id=\{0..n\}}       & \multicolumn{1}{c|}{W}       & Accept order by ID                   \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/user?id=\{0..n\}}        & \multicolumn{1}{c|}{A}       & Display user by ID                   \\
+\multicolumn{1}{|c|}{GET}    & \multicolumn{1}{l|}{/search?query=\{string\}}        & \multicolumn{1}{c|}{N/A}       & Search for article                   \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/register?type=admin}     & \multicolumn{1}{c|}{A}       & Register new admin user              \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/register?type=warehouse} & \multicolumn{1}{c|}{A}       & Register new warehouse user          \\
+\multicolumn{1}{|c|}{POST}   & \multicolumn{1}{l|}{/register?type=customer}  & \multicolumn{1}{c|}{A}       & Register new customer user           \\ \hline
+\end{tabular}
+\end{table}
+\fi
+\end{document}
