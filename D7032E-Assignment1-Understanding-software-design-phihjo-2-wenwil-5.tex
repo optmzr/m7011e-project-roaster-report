@@ -185,7 +185,14 @@ The participants of the course were encouraged to learn new technologies and too
 \section{Database}
 In order to choose the right database for a project the designers need to consider what type of data that is to be stored and if availability (NoSQL) or robustness(SQL) is of utmost importance.
 Considering the aspects above the developers chose robustness, an SQL database should be the best choice for this type of application where mainly structured data is stored. 
-While designing the system, the developers wanted the database to handle objects, hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant which is 
+While designing the system, the developers wanted the database to handle objects, hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant which is desired. PostgreSQL has the ability to use advanced constraints which enables better robustness. PostgreSQL also has support for the complete official SQL syntax. PostgreSQL is the most advanced and fastest DB
+
+Competing technologies that we discarded due to the following drawbacks.
+\begin{itemize}
+    \item MySQL is not fully ACID compliant, ignores \texttt{check} commands.
+    \item SQLite doesn't scale and is weakly typed.
+    \item MariaDB doesn't offer the same amount of dataintegrity out of the box, up to the user to implement it correctly. Doesn't support JSON as datatype in the DB.
+\end{itemize}
 
 SQL compliant
 MySQL lacks compliant
@@ -215,13 +222,21 @@ We also had to implement our own network handling when using XHR requests in the
 
 All HTTP methods, except \texttt{GET, HEAD, OPTIONS} and \texttt{TRACE}, that are sent to the web server are required to authenticate with the CSRF challenge response mechanism. Therefore the \texttt{Network} library creates a \texttt{HEAD} request toward the \texttt{/} (root) API endpoint to receive the first initial \texttt{X-CSRF-Token} for the rolling scheme.
 
-\subsection{XSS}
-The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because we also use jQuery which \textit{does not} escape HTML tag characters, the escaping is done explicitly for the search bar component. Removing the jQuery dependency is discussed in the \hyperref[subsec:remove-jquery]{Future work - Remove jQuery} section below.
+Cookie security that can mitigate XSS attacks is discussed below in \hyperref[subsec:secure-cookies]{Security considerations - Secure cookies}.
 
-\subsection{Secure cookies}
-Our user session cookies is stored in the cookie store in the browser. These are validated with the HMAC verification mechanism and encrypted with AES-256. HMAC verification ensures that the cookie content has not been tampered with during the transfer\cite{fips-198}. While AES-256 encrypts the data contained within the cookie, ensuring that no one can read it\cite{fips-197}. Even with TLS these are real issues due to the BREACH/CRIME vulnerability that is able to extract the HTTP headers for encrypted transfers\cite{breach}. The BREACH attack is mitigated using the rolling CSRF token scheme explained above in \hyperref[subsec:csrf]{Security considerations - CSRF}
+\section{XSS}
+The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because we also use jQuery which \textit{does not} escape HTML tag characters, the escaping is done explicitly for the search bar component.
 
-\subsection{Password storage}
+Removing the jQuery dependency is discussed in the \hyperref[subsec:remove-jquery]{Future work - Remove jQuery} section below.\\
+Cookie security that can mitigate XSS attacks is discussed below in \hyperref[subsec:secure-cookies]{Security considerations - Secure cookies}.
+
+\section{Secure cookies}
+\label{subsec:secure-cookies}
+User session cookies is stored in the cookie store in the browser. These are validated with the HMAC verification mechanism and encrypted with AES-256. HMAC verification ensures that the cookie content has not been tampered with during the transfer\cite{fips-198}. While AES-256 encrypts the data contained within the cookie, ensuring that no one can read it\cite{fips-197}. Even with TLS these are real issues due to the BREACH/CRIME vulnerability that is able to extract the HTTP headers for encrypted transfers\cite{breach}. The BREACH attack is mitigated using the rolling CSRF token scheme explained above in \hyperref[subsec:csrf]{Security considerations - CSRF}
+
+The session cookies has the \texttt{HttpOnly} attribute enabled which sandboxes the cookie so it cannot be accessed by JavaScript. This will mitigate the most common XSS attacks\cite{owasp-httponly}. Additionally the \texttt{sameSite} attribute is set to \texttt{Strict} which tells the browser that it should not send the cookie with cross-site requests\cite{owasp-samesite}. The \texttt{sameSite} attribute will mitigate CSRF attacks, but is only supported in modern browsers. As of August 2018 only $68,92 \%$ of the browsers used by Internet users supports the \texttt{sameSite} attribute\cite{owasp-samesite-support}. We concluded that this low adoption is reason enough to implement the rolling CSRF token scheme described above.
+
+\section{Password storage}
 There are a lot of challenges keeping user credentials secured. Our solution is based on well known algorithms, Bcrypt and SHA-512. The implementation uses official libraries in Go, the language in which the server is written, so that we don't make the mistake of "rolling our own crypto".
 
 The plaintext password that is provided by the user will first be transformed to a hash sum with SHA-512. This is due to that Bcrypt limits the input to 72 bytes. By hashing the password with SHA-512 more entropy of the original password is kept. Also, some implementations of Bcrypt that allows for longer passwords can be vulnerable to DoS attacks\cite{bcrypt-length}.
@@ -242,8 +257,8 @@ case because we can save the hash as raw bytes (PostgreSQL's \texttt{bytea}).
 
 Some implementations of Bcrypt uses a null byte (\texttt{\textbackslash{}x00}) to determine the end
 of the input\cite{bcrypt-bug}, the Go implementations does \textit{not} have this problem. So there
-is no need to encode the data as base 64. This is verified using the program
-we have created in the \texttt{cmd/testbcrypt} source folder.
+is no need to encode the data as base 64. This is verified using the program that was created for
+this project in the \texttt{cmd/testbcrypt} source folder.
 
 The approach used by Dropbox where they encode with base $64$ will generate a
 $\approx 88$ byte long key, which is then truncated to $72$ bytes. This results in a
@@ -253,18 +268,19 @@ where there is 256 possible combinations \textit{per byte}. This results in a in
 with $256^{64}$ possible combinations. Therefore our approach allows for far more
 possible entropy because $64^{72} \ll 256^{64}$ ($\approx 1,2 \times 10^{24}$ times more!).
 
-\section{References to material}
+The amount of possible entropy for both solution is so high that comparing the differences
+between the two doesn't really make sense - but our solution that allows for more entropy
+\textit{also} skips the unnecessary base 64 encode step.
 
-
-\section{Discussion}
-\section{Future work}
+\chapter{Discussion}
+\chapter{Future work}
 \label{sec:future-work}
 
-\subsection{Remove jQuery}
+\section{Remove jQuery}
 \label{subsec:remove-jquery}
 jQuery is used for the search feature and was added due to time constraints, in the future the search component can be implemented with Mithril.js and the jQuery dependency can be removed, thus removing the overhead of having to mitigate XSS injections for non-Mithril.js components.
  
- \newpage
+\newpage
 \apptocmd{\sloppy}{\hbadness 10000\relax}{}{} 
 {\RaggedRight\begin{thebibliography}{1}
 
@@ -274,7 +290,7 @@ Fetched 2019-01-10, from:
 \url{https://blog.securityevaluators.com/cracking-javas-rng-for-csrf-ea9cacd231d2}.
 
 \bibitem{breach}
-Gluck, Y., Harris N., \& Prado A. (2013, July 12) {\em BREACH: Reviving the Crime Attack, pp. 3, 11} \\
+Gluck, Y., Harris N., \& Prado A. (2013, July 12) {\em BREACH: Reviving the Crime Attack, pp. 3, 11.} \\
 Fetched 2019-01-10, from:
 \url{http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf}
 
@@ -289,14 +305,26 @@ Fetched 2019-01-10, from:
 \url{https://mithril.js.org/trust.html#how-it-works}
 
 \bibitem{fips-198}
-NIST (2002, March 2) {\em FIPS 198-1, The Keyed-Hash Message Authentication Code (HMAC), p. 1} \\
+NIST (2002, March 2) {\em FIPS 198-1, The Keyed-Hash Message Authentication Code (HMAC), p. 1.} \\
 Fetched 2019-01-10, from:
 \url{https://ia902804.us.archive.org/2/items/DTIC_ADA401868/DTIC_ADA401868.pdf}
 
 \bibitem{fips-197}
-NIST (2001, November 26) {\em FIPS 197, Annoucing the Advanced Encryption Standard (AES), p. 5} \\
+NIST (2001, November 26) {\em FIPS 197, Annoucing the Advanced Encryption Standard (AES), p. 5.} \\
 Fetched 2019-01-10, from:
 \url{https://ia802809.us.archive.org/0/items/DTIC_ADA403903/DTIC_ADA403903.pdf}
+
+\bibitem{owasp-httponly}
+OWASP (2017) {\em HttpOnly.} Fetched 2019-01-11, from:
+\url{https://www.owasp.org/index.php/HttpOnly}
+
+\bibitem{owasp-samesite}
+OWASP (2017) {\em SameSite.} Fetched 2019-01-11, from:
+\url{https://www.owasp.org/index.php/SameSite}
+
+\bibitem{owasp-samesite-support}
+OWASP (2017) {\em Cross-Site Request Forgery (CSRF) Prevention Cheat Sheet.} Fetched 2019-01-11, from:
+\url{https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Samesite_Cookie_Attribute}
 
 \bibitem{bcrypt-length}
 Goodin, D (2013, September 16) {\em Long passwords are good, but too much length can be a DoS hazard} \\
@@ -312,6 +340,11 @@ Fetched 2019-01-10, from:
 Ferrara, A (2015, March 12) {\em Security Issue: Combining Bcrypt With Other Hash Functions} \\
 Fetched 2019-01-10, from:
 \url{https://blog.ircmaxell.com/2015/03/security-issue-combining-bcrypt-with.html}
+
+\bibitem{db-benchmark}
+Ferrara, A (2015, March 12) {\em Security Issue: Combining Bcrypt With Other Hash Functions} \\
+Fetched 2019-01-10, from:
+\url{https://stackshare.io/stackups/mariadb-vs-mysql-vs-postgresql}
 
 \end{thebibliography}}
 
