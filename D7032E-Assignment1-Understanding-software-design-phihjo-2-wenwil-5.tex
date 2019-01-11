@@ -24,6 +24,7 @@
 \usepackage[parfill]{parskip}
 \usepackage{ragged2e}
 \usepackage{pgfplots}
+\usepackage{pdfpages}
 \usepackage{svg}
 \usepackage{lastpage}
 \usepackage{xcolor}
@@ -138,11 +139,12 @@
 \begin{document}
 
 \maketitle
-\thispagestyle{empty}
 \newpage
 
-\tableofcontents
+{\hypersetup{linkcolor=black}
+    \tableofcontents}
 \newpage
+
 \section{The problem}
 One of the big pains when programming in groups is code that is unreadable. Many times you can look at a code snippet and see who wrote that piece
 just based on the formatting and comments. The solution to this is to enforce a uniform code and documentation style that every person adheres to.
@@ -194,7 +196,7 @@ We also had to implement our own network handling when using XHR requests in the
 All HTTP methods, except \texttt{GET, HEAD, OPTIONS} and \texttt{TRACE}, that are sent to the web server are required to authenticate with the CSRF challenge response mechanism. Therefore the \texttt{Network} library creates a \texttt{HEAD} request toward the \texttt{/} (root) API endpoint to receive the first initial \texttt{X-CSRF-Token} for the rolling scheme.
 
 \subsection{XSS}
-The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because we also use jQuery which \textit{does not} escape HTML tag characters, the escaping is done explicitly for the search bar component. Removing the jQuery dependency is discussed in the \hyperref[sec:future-work]{Future work} section below.
+The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because we also use jQuery which \textit{does not} escape HTML tag characters, the escaping is done explicitly for the search bar component. Removing the jQuery dependency is discussed in the \hyperref[subsec:remove-jquery]{Future work - Remove jQuery} section below.
 
 \subsection{Secure cookies}
 Our user session cookies is stored in the cookie store in the browser. These are validated with the HMAC verification mechanism and encrypted with AES-256. HMAC verification ensures that the cookie content has not been tampered with during the transfer\cite{fips-198}. While AES-256 encrypts the data contained within the cookie, ensuring that no one can read it\cite{fips-197}. Even with TLS these are real issues due to the BREACH/CRIME vulnerability that is able to extract the HTTP headers for encrypted transfers\cite{breach}. The BREACH attack is mitigated using the rolling CSRF token scheme explained above in \hyperref[subsec:csrf]{Security considerations - CSRF}
@@ -229,15 +231,18 @@ input with $64^{72}$ possible combinations. Our approach of not encoding the
 input as base $64$ results in a $64$ byte long key (the output size of SHA-512),
 where there is 256 possible combinations \textit{per byte}. This results in a input
 with $256^{64}$ possible combinations. Therefore our approach allows for far more
-possible entropy because $64^{72} \ll 256^{64}$ ($\approx 99.999...$ \% more entropy!).
+possible entropy because $64^{72} \ll 256^{64}$ ($\approx 1,2 \times 10^{24}$ times more!).
 
 \section{References to material}
-\section{Deployment and installation instructions}
+
+
 \section{Discussion}
 \section{Future work}
 \label{sec:future-work}
 
-jQuery was added due to time constraints, in the future the search component can be implemented with Mithril.js and the jQuery dependency can be removed, thus removing the overhead of having to mitigate XSS injections for non-Mithril.js components.
+\subsection{Remove jQuery}
+\label{subsec:remove-jquery}
+jQuery is used for the search feature and was added due to time constraints, in the future the search component can be implemented with Mithril.js and the jQuery dependency can be removed, thus removing the overhead of having to mitigate XSS injections for non-Mithril.js components.
  
  \newpage
 \apptocmd{\sloppy}{\hbadness 10000\relax}{}{} 
@@ -247,6 +252,11 @@ jQuery was added due to time constraints, in the future the search component can
 Ramgattie, R (2018, May 14) {\em  Cracking Java’s RNG for CSRF - Javax Faces and Why CSRF Token Randomness Matters.}
 Fetched 2019-01-10, from:
 \url{https://blog.securityevaluators.com/cracking-javas-rng-for-csrf-ea9cacd231d2}.
+
+\bibitem{breach}
+Gluck, Y., Harris N., \& Prado A. (2013, July 12) {\em BREACH: Reviving the Crime Attack, pp. 3, 11} \\
+Fetched 2019-01-10, from:
+\url{http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf}
 
 \bibitem{roaster-network}
 LuleaUniversityOfTechnology/2018-project-roaster (2019) {\em 2018-project-roaster/network.ts at 19529..28560.}
@@ -268,11 +278,6 @@ NIST (2001, November 26) {\em FIPS 197, Annoucing the Advanced Encryption Standa
 Fetched 2019-01-10, from:
 \url{https://ia802809.us.archive.org/0/items/DTIC_ADA403903/DTIC_ADA403903.pdf}
 
-\bibitem{breach}
-Gluck, Y., Harris N., \& Prado A. (2013, July 12) {\em BREACH: Reviving the Crime Attack, pp. 3, 11} \\
-Fetched 2019-01-10, from:
-\url{http://breachattack.com/resources/BREACH%20-%20SSL,%20gone%20in%2030%20seconds.pdf}
-
 \bibitem{bcrypt-length}
 Goodin, D (2013, September 16) {\em Long passwords are good, but too much length can be a DoS hazard} \\
 Fetched 2019-01-10, from:
@@ -289,6 +294,9 @@ Fetched 2019-01-10, from:
 \url{https://blog.ircmaxell.com/2015/03/security-issue-combining-bcrypt-with.html}
 
 \end{thebibliography}}
+
+\appendix
+\includepdf[page=-]{install.pdf}
 
 % Here follows some good to have examples.
 \if false
