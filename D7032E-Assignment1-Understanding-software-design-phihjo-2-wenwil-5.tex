@@ -140,6 +140,11 @@
 \renewcommand\footnotemark{}
     \date{\today}
  
+\pagestyle{fancyplain}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\lhead{}
+ 
 \begin{document}
 
 \maketitle
@@ -181,7 +186,7 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
 \end{figure}
 \chapter{Application Programming Interface}
 \chapter{Technology choices}
-The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind, if possible 
+The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind, whenever applicable the developers chose enterprise grade software.
 \section{Database}
 In order to choose the right database for a project the designers need to consider what type of data that is to be stored and if availability (NoSQL) or robustness(SQL) is of utmost importance.
 Considering the aspects above the developers chose robustness, an SQL database should be the best choice for this type of application where mainly structured data is stored. 
@@ -194,14 +199,26 @@ Competing technologies that we discarded due to the following drawbacks.
 \begin{itemize}
     \item MySQL is not fully ACID compliant, ignores \texttt{check} commands.
     \item SQLite doesn't scale and is weakly typed.
-    \item MariaDB doesn't offer the same amount of data integrity out of the box, up to the user to implement it correctly. Doesn't support JSON as data type in the DB.
+    \item MariaDB doesn't offer the same amount of data integrity out of the box, up to the user to implement it correctly. 
 \end{itemize}
 
-SQL compliant
-MySQL lacks compliant
-SQL lite, 
-MariaDB, 
-HSTORE, wanted to use but never needed. hashtable
+\section{Session Database}
+To check sessions in a speedy fashion a fast in memory key/value database is used. The choice is Redis, an advanced software made for horizontal scaling by clustering. It's superior to Memcached in key names, whereas Memchached only supports 250 bytes of plain strings, Redis handles key/values to be as big as 512MB and any kind of binary data. Redis is also more modern and up to date which makes it more popular and a more relevant technology to learn.
+
+\section{Containerized Server}
+A server housed in a docker container makes deployment very simple, just swap the container with the new one! This also makes it easier to deploy the application on a different cloud, in a development environment or on dedicated hardware. Docker also works good in a CI/CD solution which we employ.
+
+\section{Golang Server}
+To acquire more in depth knowledge of a web servers inner workings we chose to write the server without a framework. The language of choice is Golang since it has a solid foundation as a web server language and that one of the developers had prior experience with it being good at handling network traffic with just the built in \texttt{http/net} package. To facilitate faster development and to not have to to everything from scratch the developers chose to use an existing back end router built in go, called \texttt{Gorilla}.
+The Go language also has good support for connecting to databases such as those above which eases development. 
+
+\section{Hosting Platform}
+To have a good uptime and availability the solution needs to be deployed on a platform that supports these constraints. The developers had the following possibilities:
+
+\begin{itemize}
+    \item To host on personal hardware in a student maintained data center called LUDD. This would ensure enough resources was avaiable for the application since the hardware is decent. Potential downside was the uptime, the facility has recently had problems with stability and 
+\end{itemize}
+\section{}
 
 \chapter{Description of software parts and interaction between them}
 
@@ -278,11 +295,59 @@ between the two doesn't really make sense - but our solution that allows for mor
 \chapter{Discussion}
 \chapter{Future work}
 \label{sec:future-work}
+\textbf{\textsuperscript{F}} Requires frontend changes. \\
+\textbf{\textsuperscript{B}} Requires backend changes.
 
-\section{Remove jQuery}
+\section{Enhancements}
+\subsection{Remove jQuery\texorpdfstring{\textsuperscript{F}}{}}
 \label{subsec:remove-jquery}
 jQuery is used for the search feature and was added due to time constraints, in the future the search component can be implemented with Mithril.js and the jQuery dependency can be removed, thus removing the overhead of having to mitigate XSS injections for non-Mithril.js components.
- 
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/225}{\#225}
+
+\subsection{Refactor UserModel\texorpdfstring{\textsuperscript{F}}{}}
+The logged in user's data is saved in the static \texttt{UserModel} model. It would be better to have a object that is passed to the views that require them (composition), this would allow for merging the \texttt{Profile} and \texttt{User} views for more DRY code. Additionally the request methods should be moved into the model to prevent code duplication. The statistics models are already implemented like this and can be used as insperation.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/184}{\#184}
+
+\subsection{Use LESS instead of overriding CSS through Mithril.js\texorpdfstring{\textsuperscript{F}}{}}
+The Semantic UI styling framework is used for most of the styling of the views. In some cases the definitions by Semantic UI is overrided inline through Mithril.js. Later during the project the \texttt{semantic-ui-less} package was pulled in and integrated with the Webpack build environment. Most of the inline CSS definitions can be removed and be defined as LESS that is compiled together with Semantic UI instead.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/130}{\#130}
+
+\subsection{Clean up error handling\texorpdfstring{\textsuperscript{F}}{}}
+There is no clear error handling pattern used for the frontend. The situation has gotten better throughout the project but there are still some parts of the code base that do not handle errors in a nice way.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/115}{\#115}
+
+\section{Features}
+\subsection{View specific Roast result\texorpdfstring{\textsuperscript{F+B}}{}}
+After a user has been Roasted their submission is saved in the database, but they cannot view their code later when they have closed the page. A feature where they can view their previous results would be a great addition to view their progress.
+
+This would require us to implement new API endpoints and also create a new view with the Monaco editor.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/163}{\#163}
+
+\section{Bugs}
+\subsection{Fix overflow for Roast submission messages\texorpdfstring{\textsuperscript{F}}{}}
+There is an issue where the scrollbar doesn't appear when the Roast submission messages overflow. This happens when the user submits code with many errors and/or warnings.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/134}{\#134}
+
+\subsection{Register XHR request callback gets interrupted by Google  Chrome\texorpdfstring{\textsuperscript{F}}{}}
+With a cold browser cache the XHR request callback gets interrupted by Google Chrome. This is \textit{probably} due to the 6 max TCP connections limit in the web browser. This bug only occurs for Google Chrome with a cold cache, if the cache is warm there is no issues.
+
+The interrupt will stop Mithril.js from redirecting to the front page upon a successful registration. The user registration is correctly registered by the backend and the user is still able to login with the newly created account.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/226}{\#226}
+
+\subsection{Requirement for full name differs with the backend\texorpdfstring{\textsuperscript{F}}{}}
+Upon registration the user is required to fill in their full name, even though it's not a requirement in the backend. Several views in the frontend utilizes the full name and they should be updated to show the username if there is not full name defined.
+
+The registration requirement for a full name can be removed after the views has been updated.
+
+Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/210}{\#210}
+
 \newpage
 \apptocmd{\sloppy}{\hbadness 10000\relax}{}{} 
 {\RaggedRight\begin{thebibliography}{1}
