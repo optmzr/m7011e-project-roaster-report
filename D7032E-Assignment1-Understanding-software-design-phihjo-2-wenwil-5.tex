@@ -181,17 +181,20 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
 \end{figure}
 \chapter{Application Programming Interface}
 \chapter{Technology choices}
-The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind.
+The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind, if possible 
 \section{Database}
 In order to choose the right database for a project the designers need to consider what type of data that is to be stored and if availability (NoSQL) or robustness(SQL) is of utmost importance.
 Considering the aspects above the developers chose robustness, an SQL database should be the best choice for this type of application where mainly structured data is stored. 
-While designing the system, the developers wanted the database to handle objects, hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant which is desired. PostgreSQL has the ability to use advanced constraints which enables better robustness. PostgreSQL also has support for the complete official SQL syntax. PostgreSQL is the most advanced and fastest DB
+While designing the system, the developers wanted the database to handle objects, hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant which is desired. PostgreSQL has the ability to use advanced constraints which enables better robustness. PostgreSQL also has support for the complete official SQL syntax. PostgreSQL is the most advanced and fastest DB\cite{db-benchmark} that is free to use and open source.
+One of the two developers in this project has prior experience with PostreSQL but only shallow knowledge which also made it interesting as a technology to learn more about.
+
+One of the advanced features PostgreSQL has is it's \texttt{HSTORE}, the ability to store sets of key/value pairs within a single PostgreSQL value. During the design phase the developers thought this feature would be good to have when storing the "Roasts" but as it turns out, it was not necessary.
 
 Competing technologies that we discarded due to the following drawbacks.
 \begin{itemize}
     \item MySQL is not fully ACID compliant, ignores \texttt{check} commands.
     \item SQLite doesn't scale and is weakly typed.
-    \item MariaDB doesn't offer the same amount of dataintegrity out of the box, up to the user to implement it correctly. Doesn't support JSON as datatype in the DB.
+    \item MariaDB doesn't offer the same amount of data integrity out of the box, up to the user to implement it correctly. Doesn't support JSON as data type in the DB.
 \end{itemize}
 
 SQL compliant
@@ -342,8 +345,8 @@ Fetched 2019-01-10, from:
 \url{https://blog.ircmaxell.com/2015/03/security-issue-combining-bcrypt-with.html}
 
 \bibitem{db-benchmark}
-Ferrara, A (2015, March 12) {\em Security Issue: Combining Bcrypt With Other Hash Functions} \\
-Fetched 2019-01-10, from:
+Castillo, J (2018) {\em PostgreSQL vs MySQL vs MariaDB - Help me Decide} \\
+Fetched 2019-01-11, from:
 \url{https://stackshare.io/stackups/mariadb-vs-mysql-vs-postgresql}
 
 \end{thebibliography}}
