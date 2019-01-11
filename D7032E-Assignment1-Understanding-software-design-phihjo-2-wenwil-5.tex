@@ -181,8 +181,8 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
 
 \begin{figure}[H]
   \centering
-  \includesvg[width=14cm]{architecture.svg}
-  \caption{System architecture overview.}
+  \includesvg[width=16cm]{architecture.svg}
+  \caption{High level system architecture overview.}
 \end{figure}
 \chapter{Application Programming Interface}
 \chapter{Technology choices}
@@ -216,9 +216,20 @@ The Go language also has good support for connecting to databases such as those 
 To have a good uptime and availability the solution needs to be deployed on a platform that supports these constraints. The developers had the following possibilities:
 
 \begin{itemize}
-    \item To host on personal hardware in a student maintained data center called LUDD. This would ensure enough resources was avaiable for the application since the hardware is decent. Potential downside was the uptime, the facility has recently had problems with stability and 
+    \item To host on personal hardware in a student maintained data center called LUDD. This would ensure that enough resources are available for the application since the hardware is decent. Potential downside was the uptime, the facility has recently had problems with stability which is a major factor.
+    \item To host on Virtual Machine provided by LUDD, as previously stated the stability is a major factor and therefore not used.
+    \item Cloud infrastructure, due to the fact that the authors are students, they had access to various cloud solutions for free and due to that cloud based experience is valued in the market today, the choice was made to implement the solution in the cloud.
 \end{itemize}
-\section{}
+
+Choosing the cloud platform is not easy, determining if you want PaaS, IaaS or some hybrid took a while. In the end it came down to maturity, scalability and where we had enough credits to run our solution. Amazon Web Services offers a solution called elastic beanstalk which is a hybrid PaaS with automatic scaling which is used as the platform for the application. The server in the docker container resides in an AWS EC2 instance, which is a IaaS. The databases are hosted in Amazon Relational Database Service (RDS) which is SaaS. 
+
+Amazon Elastic beanstalk also incorporates a elastic load balancer which is what makes scaling really simple when using multiple application servers. 
+
+Due to the technology choices being deliberately chosen to be platform independent, a change of cloud provider or move to physical hardware would not be an impossible task.
+\section{Front end Framework}
+The website will not be very big or complicated when it comes to number of pages and views.
+The desired outcome of the project is a website that feels fast as well as secure, based on modern technologies. When accessing a website, your browser start by downloading the defined files, and the website ill load faster if those files are smaller. Hence we wanted a small framework.
+We could have written the website with pure \textit{vanilla} javascript b
 
 \chapter{Description of software parts and interaction between them}
 
@@ -293,55 +304,71 @@ between the two doesn't really make sense - but our solution that allows for mor
 \textit{also} skips the unnecessary base 64 encode step.
 
 \chapter{Discussion}
+The \texttt{analyze/...} package that was written in Go for this project should be easy to extend and uses a generic interface. Also, the cache in \texttt{analyze/cache/...} is custom built for Roaster's use case and is made to be able to handle any code result.
+
+\section{Cloud provider}
+In hindsight, we might have chosen a different cloud provider due to complexity in the configuration and maintaining of the service. TODO FILL WITH MORE INFO
 \chapter{Future work}
 \label{sec:future-work}
+The proof of concept is finished for Roaster and the service works as we wanted, but there are several ways to extend the service and improve it.
+
+\section{More languages}
+One of the more obvious improvements is to add more languages than Python 3. A simple start would be to add Python 2.7. An interface for each language's static analyze toolkit has to be implemented that can fulfill the \texttt{analyze/...} package's generic \texttt{RoastResult} interface. Adding other languages than Python should be easy, but requires that a new toolchain and environment is setup for that specific language on the same system as the web service is running.
+
+\section{Microservices}
+To ensure that the service can scale as it grows the analyze system could be split into separate microservices for every language. Even in its current implementation a cache is required due to the slowness of the static analysis tools. Microservices would greatly reduce the load on the main web services. The microservice would communicate using a message queuing system, e.g. RabbitMQ, where the main web services can publish a new request and get a response later from one of the microservices. These microservices would be easy to scale for user demand.
+
+\section{Statistics}
+The presentation and collection of statistics could need more work so that more relevant statistics is presented to the user. An easy start would be statistics for the type of errors and warnings - the data already exists in the backend but is not compiled together for easy parsing through the REST API.
+
+\section{Current issues}
 \textbf{\textsuperscript{F}} Requires frontend changes. \\
 \textbf{\textsuperscript{B}} Requires backend changes.
 
-\section{Enhancements}
-\subsection{Remove jQuery\texorpdfstring{\textsuperscript{F}}{}}
+\subsection*{Enhancements}
+\subsubsection{Remove jQuery\texorpdfstring{\textsuperscript{F}}{}}
 \label{subsec:remove-jquery}
 jQuery is used for the search feature and was added due to time constraints, in the future the search component can be implemented with Mithril.js and the jQuery dependency can be removed, thus removing the overhead of having to mitigate XSS injections for non-Mithril.js components.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/225}{\#225}
 
-\subsection{Refactor UserModel\texorpdfstring{\textsuperscript{F}}{}}
+\subsubsection{Refactor UserModel\texorpdfstring{\textsuperscript{F}}{}}
 The logged in user's data is saved in the static \texttt{UserModel} model. It would be better to have a object that is passed to the views that require them (composition), this would allow for merging the \texttt{Profile} and \texttt{User} views for more DRY code. Additionally the request methods should be moved into the model to prevent code duplication. The statistics models are already implemented like this and can be used as insperation.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/184}{\#184}
 
-\subsection{Use LESS instead of overriding CSS through Mithril.js\texorpdfstring{\textsuperscript{F}}{}}
+\subsubsection{Use LESS instead of overriding CSS through Mithril.js\texorpdfstring{\textsuperscript{F}}{}}
 The Semantic UI styling framework is used for most of the styling of the views. In some cases the definitions by Semantic UI is overrided inline through Mithril.js. Later during the project the \texttt{semantic-ui-less} package was pulled in and integrated with the Webpack build environment. Most of the inline CSS definitions can be removed and be defined as LESS that is compiled together with Semantic UI instead.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/130}{\#130}
 
-\subsection{Clean up error handling\texorpdfstring{\textsuperscript{F}}{}}
+\subsubsection{Clean up error handling\texorpdfstring{\textsuperscript{F}}{}}
 There is no clear error handling pattern used for the frontend. The situation has gotten better throughout the project but there are still some parts of the code base that do not handle errors in a nice way.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/115}{\#115}
 
-\section{Features}
-\subsection{View specific Roast result\texorpdfstring{\textsuperscript{F+B}}{}}
+\subsection*{Features}
+\subsubsection{View specific Roast result\texorpdfstring{\textsuperscript{F+B}}{}}
 After a user has been Roasted their submission is saved in the database, but they cannot view their code later when they have closed the page. A feature where they can view their previous results would be a great addition to view their progress.
 
 This would require us to implement new API endpoints and also create a new view with the Monaco editor.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/163}{\#163}
 
-\section{Bugs}
-\subsection{Fix overflow for Roast submission messages\texorpdfstring{\textsuperscript{F}}{}}
+\subsection*{Bugs}
+\subsubsection{Fix overflow for Roast submission messages\texorpdfstring{\textsuperscript{F}}{}}
 There is an issue where the scrollbar doesn't appear when the Roast submission messages overflow. This happens when the user submits code with many errors and/or warnings.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/134}{\#134}
 
-\subsection{Register XHR request callback gets interrupted by Google  Chrome\texorpdfstring{\textsuperscript{F}}{}}
+\subsubsection{Register XHR request callback gets interrupted by Google  Chrome\texorpdfstring{\textsuperscript{F}}{}}
 With a cold browser cache the XHR request callback gets interrupted by Google Chrome. This is \textit{probably} due to the 6 max TCP connections limit in the web browser. This bug only occurs for Google Chrome with a cold cache, if the cache is warm there is no issues.
 
 The interrupt will stop Mithril.js from redirecting to the front page upon a successful registration. The user registration is correctly registered by the backend and the user is still able to login with the newly created account.
 
 Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/issues/226}{\#226}
 
-\subsection{Requirement for full name differs with the backend\texorpdfstring{\textsuperscript{F}}{}}
+\subsubsection{Requirement for full name differs with the backend\texorpdfstring{\textsuperscript{F}}{}}
 Upon registration the user is required to fill in their full name, even though it's not a requirement in the backend. Several views in the frontend utilizes the full name and they should be updated to show the username if there is not full name defined.
 
 The registration requirement for a full name can be removed after the views has been updated.
