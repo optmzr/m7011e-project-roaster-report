@@ -28,6 +28,7 @@
 \usepackage{pdfpages}
 \usepackage{svg}
 \usepackage{lastpage}
+\usepackage{todonotes}
 \usepackage{xcolor}
 \hypersetup{
     colorlinks,
@@ -155,6 +156,10 @@
     \tableofcontents}
 \newpage
 
+\listoftodos
+\todo[inline]{Remove \texttt{\textbackslash{}listoftodos} before hand-in}
+\newpage
+
 \chapter{The problem}
 One of the big pains when programming in groups is code that is unreadable. Many times you can look at a code snippet and see who wrote that piece
 just based on the formatting and comments. The solution to this is to enforce a uniform code and documentation style that every person adheres to.
@@ -216,7 +221,7 @@ The Go language also has good support for connecting to databases such as those 
 To have a good uptime and availability the solution needs to be deployed on a platform that supports these constraints. The developers had the following possibilities:
 
 \begin{itemize}
-    \item To host on personal hardware in a student maintained data center called LUDD. This would ensure that enough resources are available for the application since the hardware is decent. Potential downside was the uptime, the facility has recently had problems with stability which is a major factor.
+    \item To host on personal hardware in a student maintained data center called LUDD. This would ensure that enough resources are available for the application since the hardware is decent. Potential downside was the uptime, the facility has recently had problems with stability which is a major factor. \todo[inline]{Kanske nämna anekdotisk erfarenhet med egna servrar?}
     \item To host on Virtual Machine provided by LUDD, as previously stated the stability is a major factor and therefore not used.
     \item Cloud infrastructure, due to the fact that the authors are students, they had access to various cloud solutions for free and due to that cloud based experience is valued in the market today, the choice was made to implement the solution in the cloud.
 \end{itemize}
@@ -315,7 +320,8 @@ between them two doesn't really make sense - but our solution that allows for mo
 The \texttt{analyze/...} package that was written in Go for this project should be easy to extend and uses a generic interface. Also, the cache in \texttt{analyze/cache/...} is custom built for Roaster's use case and is made to be able to handle any code result.
 
 \section{Cloud provider}
-In hindsight, we might have chosen a different cloud provider due to complexity in the configuration and maintaining of the service. TODO FILL WITH MORE INFO
+In hindsight, we might have chosen a different cloud provider due to complexity in the configuration and maintaining of the service. \todo[inline]{FILL WITH MORE INFO}
+
 \chapter{Future work}
 \label{sec:future-work}
 The proof of concept is finished for Roaster and the service works as we wanted, but there are several ways to extend the service and improve it. Below follows some larger changes that could extend Roaster. Additionally the current issues that should be solved before extending Roaster is presented in the \hyperref[sec:issue-tracker]{Future work - Issue tracker} section.
@@ -329,8 +335,8 @@ To ensure that the service can scale as it grows the analyze system could be spl
 \section{Statistics}
 The presentation and collection of statistics could need more work so that more relevant statistics is presented to the user. An easy start would be statistics for the type of errors and warnings - the data already exists in the backend but is not compiled together for easy parsing through the REST API.
 
-\section{CLI and IDE integration}
-REVOLUTION!!!!!!!
+\section{CLI \& IDE integration}
+\todo[inline]{Write CLI \& IDE integration section}
 
 \section{Issue tracker}
 \label{sec:issue-tracker}
