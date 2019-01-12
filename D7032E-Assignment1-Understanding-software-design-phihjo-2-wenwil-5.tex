@@ -227,9 +227,17 @@ Amazon Elastic beanstalk also incorporates a elastic load balancer which is what
 
 Due to the technology choices being deliberately chosen to be platform independent, a change of cloud provider or move to physical hardware would not be an impossible task.
 \section{Front end Framework}
-The website will not be very big or complicated when it comes to number of pages and views.
+The website will not be very big when it comes to number of pages and views.
 The desired outcome of the project is a website that feels fast as well as secure, based on modern technologies. When accessing a website, your browser start by downloading the defined files, and the website ill load faster if those files are smaller. Hence we wanted a small framework.
-We could have written the website with pure \textit{vanilla} javascript b
+We could have written the website with pure \textit{vanilla} JavaScript but frameworks most often makes things easier for the developers by not needing to write a frontend router. Other reasons to choose a framework is Virtual DOM, separate API from frontend and to learn how to write a Single Page Application.
+
+Considered technologies was the following:
+\begin{itemize}
+    \item React.js + Redux router, was a good candidate with a Virtual DOM, good community support and neither of the developers had written in it before. Down side was the size of React.js together with Redux.
+    \item Vue.js also has a virtual DOM and good community support, but is big in size.
+    \item Angular.js Does not have a virtual DOM and does therefore not qualify for our needs.
+    \item Mithril.js Has a virtual DOM, is small in size and it's virtual DOM is fastest of the ones listed above. Smaller community but suits the needs of the project and is therefore chosen.
+\end{itemize}
 
 \chapter{Description of software parts and interaction between them}
 
@@ -286,7 +294,7 @@ global pepper (shared global encryption key) which is overkill for our use
 case. They also encode their SHA-512 with base 64, which is not needed in our
 case because we can save the hash as raw bytes (PostgreSQL's \texttt{bytea}).
 
-Some implementations of Bcrypt uses a null byte (\texttt{\textbackslash{}x00}) to determine the end
+Some implementations of Bcrypt uses a null byte (\texttt{0x00}) to determine the end
 of the input\cite{bcrypt-bug}, the Go implementations does \textit{not} have this problem. So there
 is no need to encode the data as base 64. This is verified using the program that was created for
 this project in the \texttt{cmd/testbcrypt} source folder.
@@ -295,13 +303,13 @@ The approach used by Dropbox where they encode with base $64$ will generate a
 $\approx 88$ byte long key, which is then truncated to $72$ bytes. This results in a
 input with $64^{72}$ possible combinations. Our approach of not encoding the
 input as base $64$ results in a $64$ byte long key (the output size of SHA-512),
-where there is 256 possible combinations \textit{per byte}. This results in a input
+where there is 256 possible combinations \textit{per byte}. This results in an input
 with $256^{64}$ possible combinations. Therefore our approach allows for far more
 possible entropy because $64^{72} \ll 256^{64}$ ($\approx 1,2 \times 10^{24}$ times more!).
 
 The amount of possible entropy for both solution is so high that comparing the differences
-between the two doesn't really make sense - but our solution that allows for more entropy
-\textit{also} skips the unnecessary base 64 encode step.
+between them two doesn't really make sense - but our solution that allows for more entropy
+\textit{also} skips the unnecessary base 64 encode step due to the lack of the null byte bug.
 
 \chapter{Discussion}
 The \texttt{analyze/...} package that was written in Go for this project should be easy to extend and uses a generic interface. Also, the cache in \texttt{analyze/cache/...} is custom built for Roaster's use case and is made to be able to handle any code result.
@@ -310,7 +318,7 @@ The \texttt{analyze/...} package that was written in Go for this project should 
 In hindsight, we might have chosen a different cloud provider due to complexity in the configuration and maintaining of the service. TODO FILL WITH MORE INFO
 \chapter{Future work}
 \label{sec:future-work}
-The proof of concept is finished for Roaster and the service works as we wanted, but there are several ways to extend the service and improve it.
+The proof of concept is finished for Roaster and the service works as we wanted, but there are several ways to extend the service and improve it. Below follows some larger changes that could extend Roaster. Additionally the current issues that should be solved before extending Roaster is presented in the \hyperref[sec:issue-tracker]{Future work - Issue tracker} section.
 
 \section{More languages}
 One of the more obvious improvements is to add more languages than Python 3. A simple start would be to add Python 2.7. An interface for each language's static analyze toolkit has to be implemented that can fulfill the \texttt{analyze/...} package's generic \texttt{RoastResult} interface. Adding other languages than Python should be easy, but requires that a new toolchain and environment is setup for that specific language on the same system as the web service is running.
@@ -321,7 +329,11 @@ To ensure that the service can scale as it grows the analyze system could be spl
 \section{Statistics}
 The presentation and collection of statistics could need more work so that more relevant statistics is presented to the user. An easy start would be statistics for the type of errors and warnings - the data already exists in the backend but is not compiled together for easy parsing through the REST API.
 
-\section{Current issues}
+\section{CLI and IDE integration}
+REVOLUTION!!!!!!!
+
+\section{Issue tracker}
+\label{sec:issue-tracker}
 \textbf{\textsuperscript{F}} Requires frontend changes. \\
 \textbf{\textsuperscript{B}} Requires backend changes.
 
