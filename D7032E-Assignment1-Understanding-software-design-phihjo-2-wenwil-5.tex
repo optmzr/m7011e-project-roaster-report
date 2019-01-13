@@ -193,22 +193,23 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
 \chapter{Technology choices}
 The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind, whenever applicable the developers chose enterprise grade software.
 \section{Database}
-In order to choose the right database for a project the designers need to consider what type of data that is to be stored and if availability (NoSQL) or robustness(SQL) is of utmost importance.
+In order to choose the right database for a project the designers need to consider what type of data that is to be stored and if availability (NoSQL) or robustness (SQL) is of utmost importance.
 Considering the aspects above the developers chose robustness, an SQL database should be the best choice for this type of application where mainly structured data is stored. 
-While designing the system, the developers wanted the database to handle objects, hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant which is desired. PostgreSQL has the ability to use advanced constraints which enables better robustness. PostgreSQL also has support for the complete official SQL syntax. PostgreSQL is the most advanced and fastest DB\cite{db-benchmark} that is free to use and open source.
-One of the two developers in this project has prior experience with PostreSQL but only shallow knowledge which also made it interesting as a technology to learn more about.
 
-One of the advanced features PostgreSQL has is it's \texttt{HSTORE}, the ability to store sets of key/value pairs within a single PostgreSQL value. During the design phase the developers thought this feature would be good to have when storing the "Roasts" but as it turns out, it was not necessary.
+While designing the system, the developers wanted the database to handle objects with strict value types (domains), hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant\cite{pg-acid} which is desired. PostgreSQL has the ability to use advanced data constraints which enables better robustness. PostgreSQL also has good conformance with the SQL standard\cite{pg-sql-conformance}. PostgreSQL is one of the most advanced and fastest databases\cite{db-benchmark} that is free to use and open source.
+One of the two developers in this project had prior experience with PostgreSQL but only shallow knowledge which also made it interesting as a technology to learn more about.
+
+One of the advanced features PostgreSQL has is its \texttt{HSTORE}, the ability to store sets of key/value pairs within a single PostgreSQL value\cite{pg-hstore}, comparable to an hash table. During the design phase the developers thought this feature would be good to have when storing the messages\footnote{Warnings and errors for Roast submissions.} but as it turns out, it was not necessary. The messages was instead stored in separate tables using a UUID based on the content of the message as an identifier and primary key to prevent data duplication. Each message was then referenced by each submission result using a many-to-many relationship. UUID is also supported as a data type in PostgreSQL\cite{pg-uuid} allowing for validating the UUID using their built-in constraints.
 
 Competing technologies that we discarded due to the following drawbacks.
 \begin{itemize}
-    \item MySQL is not fully ACID compliant, ignores \texttt{check} commands.
-    \item SQLite doesn't scale and is weakly typed.
-    \item MariaDB doesn't offer the same amount of data integrity out of the box, up to the user to implement it correctly. 
+    \item MySQL ignores \texttt{CHECK} constraints\cite{mysql-check-constraint}, requires writing advanced triggers to emulate \texttt{CHECK} instead\cite{mysql-emulate-check}.
+    \item SQLite is primarily for embedded systems or low to medium volume websites and doesn't scale\cite{sqlite-when-to-use}.
+    \item MariaDB doesn't offer the same amount of data integrity out of the box as \\ PostgreSQL\cite{mariadb-data-integrity}, up to the user to implement it correctly. 
 \end{itemize}
 
 \section{Session Database}
-To check sessions in a speedy fashion a fast in memory key/value database is used. The choice is Redis, an advanced software made for horizontal scaling by clustering. It's superior to Memcached in key names, whereas Memchached only supports 250 bytes of plain strings, Redis handles key/values to be as big as 512MB and any kind of binary data. Redis is also more modern and up to date which makes it more popular and a more relevant technology to learn.
+To check sessions in a speedy fashion a fast in memory key/value database is used. The choice is Redis, an advanced software made for horizontal scaling by clustering. It's superior to Memcached in key names, whereas Memchached only supports 250 bytes of plain strings, Redis handles key/values to be as big as 512MB and any kind of binary data\todo[inline]{KÄLLA!??!}. Redis is also more modern and up to date which makes it more popular and a more relevant technology to learn. \todo[inline]{KÄLLA?!?!}
 
 \section{Containerized Server}
 A server housed in a docker container makes deployment very simple, just swap the container with the new one! This also makes it easier to deploy the application on a different cloud, in a development environment or on dedicated hardware. Docker also works good in a CI/CD solution which we employ.
@@ -254,34 +255,35 @@ Several security issues has been taken into consideration when developing the sy
 \section{HTTPS/TLS}
 The connection from the client to the web server is made over TLS with a Amazon signed certificate.
 This is configured by the Elastic Load Balancer running on Elastic Beanstalk that acts like a reverse proxy.
-The request then propagates through our VPC (Virtual Private Cloud) in AWS in plaintext. 
+The request then propagates through the VPC (Virtual Private Cloud) in AWS in plaintext. 
 
 \section{CSRF}
 \label{subsec:csrf}
-The site has implemented protection against CSRF (Cross Site Request Forgery). CSRF is a man-in-the-middle attack where the automatic cookie submission (the cookie is always sent for every request by the web browser) is abused. A site that utilizes cross-origin requests cannot use the \texttt{site-only} attribute for cookies, i.e. another malicious website open in another tab can also issue authenticated requests to the web service\cite{rick}.
+The site has implemented protection against CSRF (Cross Site Request Forgery). CSRF is a man-in-the-middle attack where the automatic cookie submission\footnote{The cookie is always sent for every request by the web browser.} is abused. A site that utilizes cross-origin requests cannot use the \texttt{site-only} attribute for cookies, i.e. another malicious website open in another tab can also issue authenticated requests to the web service\cite{rick}.
 
-In order to increase the security against CSRF attacks we have chosen to use and implement a rolling random token scheme. The rolling scheme will ensure that the CSRF token is not stolen as demonstrated by the BREACH attack\cite{breach}. First, a CSRF cookie is issued by the web server to sign challenges against, then a challenge is issued by the web server as a HTTP header called \texttt{X-CSRF-Token} for every request.
+In order to increase the security against CSRF attacks a rolling random token scheme was chosen and implemented. The rolling scheme ensures that the CSRF token is not stolen as demonstrated by the BREACH attack\cite{breach}. First, a CSRF cookie is issued by the web server to sign challenges against, then a challenge is issued by the web server as a HTTP header called \texttt{X-CSRF-Token} for every request.
 
-We also had to implement our own network handling when using XHR requests in the frontend due to the CSRF mitigation system. The library we have implemented, called \texttt{Network}\cite{roaster-network}, wraps the Mithril.js \texttt{m.request} method and retrieves the new \texttt{X-CSRF-Token} header for every requests and then saves it so it can be used for the next XHR request.
+A custom network handling system had to be implemented that wraps XHR requests in the frontend due to the CSRF mitigation system.  The library that has been implemented, called \texttt{Network}\cite{roaster-network}, wraps the Mithril.js \texttt{m.request} method and retrieves the new \texttt{X-CSRF-Token} header for every requests and then saves it so it can be used for the next XHR request.
 
 All HTTP methods, except \texttt{GET, HEAD, OPTIONS} and \texttt{TRACE}, that are sent to the web server are required to authenticate with the CSRF challenge response mechanism. Therefore the \texttt{Network} library creates a \texttt{HEAD} request toward the \texttt{/} (root) API endpoint to receive the first initial \texttt{X-CSRF-Token} for the rolling scheme.
 
 Cookie security that can mitigate XSS attacks is discussed below in \hyperref[subsec:secure-cookies]{Security considerations - Secure cookies}.
 
 \section{XSS}
-The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because we also use jQuery which \textit{does not} escape HTML tag characters, the escaping is done explicitly for the search bar component.
+The Mithril.js framework will automatically escape all HTML tag characters before inserting into the Virtual DOM that it creates\cite{mithril-trust}. Therefore most XSS (Cross Site Scripting) issues are mitigated. However, because jQuery is used for the search component extra caution has to be taken. The jQuery Search plugin \textit{does not} escape HTML tag characters so in this case the escaping has to be done explicitly.
 
-Removing the jQuery dependency is discussed in the \hyperref[subsec:remove-jquery]{Future work - Remove jQuery} section below.\\
+Removing the jQuery dependency is discussed in the \hyperref[subsec:remove-jquery]{Future work - Remove jQuery} section below.
+
 Cookie security that can mitigate XSS attacks is discussed below in \hyperref[subsec:secure-cookies]{Security considerations - Secure cookies}.
 
 \section{Secure cookies}
 \label{subsec:secure-cookies}
 User session cookies is stored in the cookie store in the browser. These are validated with the HMAC verification mechanism and encrypted with AES-256. HMAC verification ensures that the cookie content has not been tampered with during the transfer\cite{fips-198}. While AES-256 encrypts the data contained within the cookie, ensuring that no one can read it\cite{fips-197}. Even with TLS these are real issues due to the BREACH/CRIME vulnerability that is able to extract the HTTP headers for encrypted transfers\cite{breach}. The BREACH attack is mitigated using the rolling CSRF token scheme explained above in \hyperref[subsec:csrf]{Security considerations - CSRF}
 
-The session cookies has the \texttt{HttpOnly} attribute enabled which sandboxes the cookie so it cannot be accessed by JavaScript. This will mitigate the most common XSS attacks\cite{owasp-httponly}. Additionally the \texttt{sameSite} attribute is set to \texttt{Strict} which tells the browser that it should not send the cookie with cross-site requests\cite{owasp-samesite}. The \texttt{sameSite} attribute will mitigate CSRF attacks, but is only supported in modern browsers. As of August 2018 only $68,92 \%$ of the browsers used by Internet users supports the \texttt{sameSite} attribute\cite{owasp-samesite-support}. We concluded that this low adoption is reason enough to implement the rolling CSRF token scheme described above.
+The session cookies has the \texttt{HttpOnly} attribute enabled which sandboxes the cookie so it cannot be accessed by JavaScript. This will mitigate the most common XSS attacks\cite{owasp-httponly}. Additionally the \texttt{sameSite} attribute is set to \texttt{Strict} which tells the browser that it should not send the cookie with cross-site requests\cite{owasp-samesite}. The \texttt{sameSite} attribute will mitigate CSRF attacks, but is only supported in modern browsers. As of August 2018 only $68,92 \%$ of the browsers used by Internet users supports the \texttt{sameSite} attribute\cite{owasp-samesite-support}. It was concluded that this low adoption is reason enough to implement the rolling CSRF token scheme described above.
 
 \section{Password storage}
-There are a lot of challenges keeping user credentials secured. Our solution is based on well known algorithms, Bcrypt and SHA-512. The implementation uses official libraries in Go, the language in which the server is written, so that we don't make the mistake of "rolling our own crypto".
+There are a lot of challenges keeping user credentials secured. The solution that was chosen is based on well known algorithms, Bcrypt and SHA-512. The implementation uses official libraries in Go, the language in which the server is written.
 
 The plaintext password that is provided by the user will first be transformed to a hash sum with SHA-512. This is due to that Bcrypt limits the input to 72 bytes. By hashing the password with SHA-512 more entropy of the original password is kept. Also, some implementations of Bcrypt that allows for longer passwords can be vulnerable to DoS attacks\cite{bcrypt-length}.
 
@@ -289,15 +291,17 @@ The SHA-512 hash sum is then hashed again using Bcrypt. This is because
 SHA-512 is a \textit{fast} hash algorithm not made for password hashing. Bcrypt is
 designed to be slow and hard to speed up using hardware such as FPGAs and
 ASICs. The work factor is set to 12 which should make the expensive Blowfish
-setup take $> 250$ ms ($364.815906$ ms precisely on one of our laptops).
+setup take $> 250$ ms\footnote{$364.815906$ ms precisely on one of the developers slow laptop.}.
 The Bcrypt algorithm also takes care of salting of the password and prepends 
 it with the resulting hash.
 
-Dropbox has a great article\cite{dropbox-passwords} on their password hashing scheme which our
-scheme shares many similarities with, we do not, however, use AES-256 with a
-global pepper (shared global encryption key) which is overkill for our use
-case. They also encode their SHA-512 with base 64, which is not needed in our
-case because we can save the hash as raw bytes (PostgreSQL's \texttt{bytea}).
+
+Dropbox has a great article\cite{dropbox-passwords} on their password hashing scheme
+which the Roaster scheme shares many similarities with, however, encryption using AES-256
+with a global pepper\footnote{Shared global encryption key.} is not used. This was deemed overkill 
+by the developers for the use case of this project. Dropbox also encodes their SHA-512 with base 64,
+which is not needed in the case of Roaster because the hash result can be saved as raw
+bytes\footnote{Using PostgreSQL's \texttt{bytea} data type.}.
 
 Some implementations of Bcrypt uses a null byte (\texttt{0x00}) to determine the end
 of the input\cite{bcrypt-bug}, the Go implementations does \textit{not} have this problem. So there
@@ -306,14 +310,14 @@ this project in the \texttt{cmd/testbcrypt} source folder.
 
 The approach used by Dropbox where they encode with base $64$ will generate a
 $\approx 88$ byte long key, which is then truncated to $72$ bytes. This results in a
-input with $64^{72}$ possible combinations. Our approach of not encoding the
-input as base $64$ results in a $64$ byte long key (the output size of SHA-512),
+input with $64^{72}$ possible combinations. The Roaster approach of not encoding the
+input as base $64$ results in a $64$ byte long key\footnote{The output size of SHA-512.},
 where there is 256 possible combinations \textit{per byte}. This results in an input
-with $256^{64}$ possible combinations. Therefore our approach allows for far more
+with $256^{64}$ possible combinations. Therefore the Roaster approach allows for far more
 possible entropy because $64^{72} \ll 256^{64}$ ($\approx 1,2 \times 10^{24}$ times more!).
 
 The amount of possible entropy for both solution is so high that comparing the differences
-between them two doesn't really make sense - but our solution that allows for more entropy
+between them two doesn't really make sense - but the Roaster solution that allows for more entropy
 \textit{also} skips the unnecessary base 64 encode step due to the lack of the null byte bug.
 
 \chapter{Discussion}
@@ -458,6 +462,30 @@ Fetched 2019-01-10, from:
 Castillo, J (2018) {\em PostgreSQL vs MySQL vs MariaDB - Help me Decide} \\
 Fetched 2019-01-11, from:
 \url{https://stackshare.io/stackups/mariadb-vs-mysql-vs-postgresql}
+
+\bibitem{pg-hstore}
+PostgreSQL.org (2018) {\em PostgreSQL: Documentation: 11: F.16. hstore} Fetched 2019-01-13, from: \url{https://www.postgresql.org/docs/11/hstore.html}.
+
+\bibitem{pg-acid}
+Lane, T (2000, October 30) {\em Transaction Processing in PostgreSQL, p. 14.} Fetched 2019-01-13, from: \url{https://www.postgresql.org/files/developer/transactions.pdf}.
+
+\bibitem{pg-sql-conformance}
+PostgreSQL.org (2018) {\em PostgreSQL: Documentation: 11: Appendix D. SQL Conformance.} Fetched 2019-01-13, from: \url{https://www.postgresql.org/docs/11/features.html}.
+
+\bibitem{sqlite-when-to-use}
+SQLite.org (n.d.) {\em Appropriate Uses For SQLite.} Fetched 2019-01-13, from: \url{https://www.sqlite.org/whentouse.html}.
+
+\bibitem{pg-uuid}
+PostgreSQL.org (2018) {\em PostgreSQL: Documentation: 11: 8.12. UUID Type.} Fetched 2019-01-13, from: \url{https://www.postgresql.org/docs/11/datatype-uuid.html}.
+
+\bibitem{mysql-check-constraint}
+MySQL.com (2018) {\em MySQL :: MySQL 8.0 Reference Manual :: 13.1.20 CREATE TABLE Syntax.} Fetched 2019-01-13, from: \url{https://dev.mysql.com/doc/refman/8.0/en/create-table.html}.
+
+\bibitem{mysql-emulate-check}
+MySQLTutorial (n.d.) {\em MySQL CHECK Constraint Emulation.} Fetched 2019-01-13, from: \url{http://www.mysqltutorial.org/mysql-check-constraint/}
+
+\bibitem{mariadb-data-integrity}
+Schönig, H. (2017, April 27) {\em Why favor PostgreSQL over MariaDB / MySQL.} Fetched 2019-01-13, from:  \url{https://www.cybertec-postgresql.com/en/why-favor-postgresql-over-mariadb-mysql/#}
 
 \end{thebibliography}}
 
