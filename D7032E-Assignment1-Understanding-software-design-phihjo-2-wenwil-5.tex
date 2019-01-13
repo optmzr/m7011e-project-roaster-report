@@ -217,6 +217,8 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
 }
 The Roaster API v0.0.1 is fully documented and can be viewed at the following address: \url{https://roast.software/doc/restapi/}.
 
+\section{Bootstrap with CSRF mitigation}
+\label{sec:api-bootstrap}
 All API endpoints are protected with CSRF mitigation, except for \texttt{GET, HEAD, OPTIONS} and \texttt{TRACE} (non-write operations). Therefore before doing write operations such as \texttt{POST} and \texttt{PUT} the \texttt{X-CSRF-Token} has to be retrieved. Even if \texttt{GET} isn't protected with CSRF mitigation the web server will respond with a fresh \texttt{X-CSRF-Token} that can be used for doing a write operation.
 
 A simple \texttt{HEAD} request to the \texttt{/} endpoint will give all the headers that the web server would respond with for a \texttt{GET} request. This is utilized to only retrieve the required token and not the whole web application that it would normally do.
@@ -237,9 +239,8 @@ For any following request that is a write operation the cookies and token has to
 # -i - Include response headers in output.
 # -b cookies.txt - Read the cookies (incl. challenge).
 # -c cookies.txt - Write the new cookies (incl. challenge).
-# -H @token.txt  - Read current token.
-# grep -Fi x-csrf-token > token.txt - Write the next token.
-curl -i \
+# -H @token.txt  - Read token.
+curl \
     -b cookies.txt \
     -c cookies.txt \
     -H @token.txt \
@@ -248,6 +249,35 @@ curl -i \
     "{ \
         \"language\": \"python3\", \
         \"code\": \"print('Hello, world!')\" \
+    }"
+\end{verbatim}
+
+\section{Authenticate an user}
+Because the authentication towards the API is a \texttt{POST} request the CSRF mitigation has to be bootstrapped as explained in \hyperref[sec:api-bootstrap]{API - Bootstrap with CSRF mitigation}. After the bootstrapping has been done the following API request will authenticate a user and save the resulting session cookie:
+\begin{verbatim}
+curl \
+    -b cookies.txt \
+    -c cookies.txt \
+    -H @token.txt \
+    -H "Content-Type: application/json" \
+    -X POST https://roast.software/session -d \
+    "{ \
+        \"username\": \"willeponken\", \
+        \"password\": \"my_very_secure_password\" \
+    }"
+\end{verbatim}
+
+Now any endpoint that requires a session can be queried, e.g. modifying the user profile information:
+\begin{verbatim}
+curl \
+    -b cookies.txt \
+    -c cookies.txt \
+    -H @token.txt \
+    -H "Content-Type: application/json" \
+    -X PATCH https://roast.software/session -d \
+    "{ \
+        \"email\": \"mymail@example.org\", \
+        \"fullname\": \"William von Willeponken\" \
     }"
 \end{verbatim}
 
