@@ -297,7 +297,7 @@ To check sessions in a speedy fashion a fast in memory key/value database is use
 
 \section{Containerized Server}
 A server housed in a docker container makes deployment very simple, just swap the container with the new one! This also makes it easier to deploy the application on a different cloud, in a development environment or on dedicated hardware. Docker also works good in a CI/CD solution which we employ.
-
+Going into the project 
 \section{Golang Server}
 To acquire more in depth knowledge of a web servers inner workings we chose to write the server without a framework. The language of choice is Golang since it has a solid foundation as a web server language and that one of the developers had prior experience with it being good at handling network traffic with just the built in \texttt{http/net} package. To facilitate faster development and to not have to to everything from scratch the developers chose to use an existing back end router built in go, called \texttt{Gorilla}.
 The Go language also has good support for connecting to databases such as those above which eases development. 
