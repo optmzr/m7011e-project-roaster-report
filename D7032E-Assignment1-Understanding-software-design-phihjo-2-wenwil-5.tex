@@ -173,6 +173,23 @@ The statistics can then be viewed in a feed where both your own and your friends
 Global statistics like most common errors and number of rows analyzed is displayed on a page that can be viewed by everyone.
 
 \chapter{System design}
+\section{API}
+The Roaster API is designed to adhere to the REST principles and at the same time be secure and support user sessions. A trade off has to be made for the requirement of statelessness in REST\cite{fielding-rest} where both the CSRF mitigation\footnote{Explained below in \hyperref[subsec:csrf]{Security considerations - CSRF}.} and user session requires some state that is kept on the server-side. All API endpoints follow CRUD\footnote{Create, Read, Update, Delete} where the HTTP methods are used to represent each part, in the case of the Roaster API the following rules has been decided:
+\begin{itemize}
+    \item Create - \texttt{POST}
+    \item Read - \texttt{GET / HEAD}
+    \item Update - \texttt{PATCH / PUT}
+    \item Delete - \texttt{DELETE}
+\end{itemize}
+The \texttt{PUT} method is used when a resource is overridden, such as when uploading a new profile picture. While the \texttt{PATCH} method is used when the request have the feature of replacing partial data, such as when updating partial user profile information. \texttt{POST} is used when a new resource should be created, such as a new code submission. Currently, for Roaster API v0.0.1, there is no \texttt{DELETE} operation implemented, but one example would be deleting an user or a code submission. The \texttt{GET} and \texttt{HEAD} method should never modify any data.
+
+The Roaster API tries to use clean and logical URI components. The structure uses URI components as categories that are routed to sub-routers in the backend. An example is the \texttt{/user} route, which has several endpoints such as
+\begin{itemize}
+    \item \texttt{/user/\{username\}} - User profile information handling for \textit{\{username\}},
+    \item \texttt{/user/\{username\}/avatar} - Change or retrieve profile picture for \textit{\{username\}},
+    \item \texttt{/user/\{username\}/followers} - Retrieve a list of followers for \textit{\{username\}}.
+\end{itemize}
+Where the \texttt{/user} sub-router dispatches different handlers depending on the last URI component (e.g. \texttt{/avatar} or \texttt{/followers}) together with the username as a parameter. In the case of \texttt{/user/\{username\}} the sub-router sees the last URI component as \texttt{/}.
 
 \chapter{System architecture}
 The system architecture is designed to be deploy able independently of underlying platform. This led us to containerize the server in order to facilitate the deployment process and avoid installation mishaps. Both the databases are not containerized as there is no gain in doing so.
@@ -189,7 +206,51 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
   \includesvg[width=16cm]{architecture.svg}
   \caption{High level system architecture overview.}
 \end{figure}
-\chapter{Application Programming Interface}
+\chapter{API}
+\todo[inline]{
+ * Explain how it's RESTful
+    - Examples how the status codes are used
+    - Explanation for choosing some HTTP methods
+ * Give some examples
+    - Especially for CSRF
+ * Manually writing the whole API blueprint documentation?
+}
+The Roaster API v0.0.1 is fully documented and can be viewed at the following address: \url{https://roast.software/doc/restapi/}.
+
+All API endpoints are protected with CSRF mitigation, except for \texttt{GET, HEAD, OPTIONS} and \texttt{TRACE} (non-write operations). Therefore before doing write operations such as \texttt{POST} and \texttt{PUT} the \texttt{X-CSRF-Token} has to be retrieved. Even if \texttt{GET} isn't protected with CSRF mitigation the web server will respond with a fresh \texttt{X-CSRF-Token} that can be used for doing a write operation.
+
+A simple \texttt{HEAD} request to the \texttt{/} endpoint will give all the headers that the web server would respond with for a \texttt{GET} request. This is utilized to only retrieve the required token and not the whole web application that it would normally do.
+
+In the following example cURL is used to demonstrate the bootstrapping process.
+
+First, retrieve the \texttt{X-CSRF-Token} header and the CSRF challenge cookie with:
+\begin{verbatim}
+curl -c cookies.txt --head https://roast.software/ \
+    | grep -Fi x-csrf-token > token.txt
+\end{verbatim}
+Where \texttt{cookies.txt} contains the cookies and \texttt{token.txt} contains the next \texttt{X-CSRF-Token}.
+The \texttt{cookies.txt} and \texttt{token.txt} files can be read by specifying \texttt{-b cookies.txt -H @token.txt} as arguments to cURL.
+
+\newpage
+For any following request that is a write operation the cookies and token has to be sent by the client, for a \texttt{POST /roast} the command would be:
+\begin{verbatim}
+# -i - Include response headers in output.
+# -b cookies.txt - Read the cookies (incl. challenge).
+# -c cookies.txt - Write the new cookies (incl. challenge).
+# -H @token.txt  - Read current token.
+# grep -Fi x-csrf-token > token.txt - Write the next token.
+curl -i \
+    -b cookies.txt \
+    -c cookies.txt \
+    -H @token.txt \
+    -H "Content-Type: application/json" \
+    -X POST https://roast.software/roast -d \
+    "{ \
+        \"language\": \"python3\", \
+        \"code\": \"print('Hello, world!')\" \
+    }"
+\end{verbatim}
+
 \chapter{Technology choices}
 The participants of the course were encouraged to learn new technologies and tools that the developers had never used before or wanted to learn more about. The technologies chosen all was chosen with scalability and security in mind, whenever applicable the developers chose enterprise grade software.
 \section{Database}
@@ -232,7 +293,7 @@ Choosing the cloud platform is not easy, determining if you want PaaS, IaaS or s
 Amazon Elastic beanstalk also incorporates a elastic load balancer which is what makes scaling really simple when using multiple application servers. 
 
 Due to the technology choices being deliberately chosen to be platform independent, a change of cloud provider or move to physical hardware would not be an impossible task.
-\section{Front end Framework}
+\section{Front end framework}
 The website will not be very big when it comes to number of pages and views.
 The desired outcome of the project is a website that feels fast as well as secure, based on modern technologies. When accessing a website, your browser start by downloading the defined files, and the website ill load faster if those files are smaller. Hence we wanted a small framework.
 We could have written the website with pure \textit{vanilla} JavaScript but frameworks most often makes things easier for the developers by not needing to write a frontend router. Other reasons to choose a framework is Virtual DOM, separate API from frontend and to learn how to write a Single Page Application.
@@ -340,7 +401,7 @@ To ensure that the service can scale as it grows the analyze system could be spl
 The presentation and collection of statistics could need more work so that more relevant statistics is presented to the user. An easy start would be statistics for the type of errors and warnings - the data already exists in the backend but is not compiled together for easy parsing through the REST API.
 
 \section{CLI \& IDE integration}
-\todo[inline]{Write CLI \& IDE integration section}
+One feature that the developers had in mind from the start was integrating the system with a CLI tool and IDE's. Developers could hook their development environment with a CLI that will automatically send their code, on save or commit, to Roaster using its REST API. The API is already built to be easy to integrate with and it should be trivial to create a simple CLI tool. Integrating Roaster with IDE's would allow the score and statistics to be displayed directly inside the IDE, and at the same time allow for the coders friends to view their progress through the Roaster web interface.
 
 \section{Issue tracker}
 \label{sec:issue-tracker}
