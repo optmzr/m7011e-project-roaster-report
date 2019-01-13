@@ -174,14 +174,15 @@ Global statistics like most common errors and number of rows analyzed is display
 
 \chapter{System design}
 \section{API}
-The Roaster API is designed to adhere to the REST principles and at the same time be secure and support user sessions. A trade off has to be made for the requirement of statelessness in REST\cite{fielding-rest} where both the CSRF mitigation\footnote{Explained below in \hyperref[subsec:csrf]{Security considerations - CSRF}.} and user session requires some state that is kept on the server-side. All API endpoints follow CRUD\footnote{Create, Read, Update, Delete} where the HTTP methods are used to represent each part, in the case of the Roaster API the following rules has been decided:
+\label{sec:api-design}
+The Roaster API is designed to adhere to the REST principles and at the same time be secure and support user sessions. A trade off has to be made for the requirement of being stateless in REST\cite{fielding-rest} where both the CSRF mitigation\footnote{Explained below in \hyperref[subsec:csrf]{Security considerations - CSRF}.} and user session requires some state that is kept on the server-side. All API endpoints follow CRUD\footnote{Create, Read, Update, Delete} where the HTTP methods are used to represent each part, in the case of the Roaster API the following rules has been decided:
 \begin{itemize}
     \item Create - \texttt{POST}
     \item Read - \texttt{GET / HEAD}
     \item Update - \texttt{PATCH / PUT}
     \item Delete - \texttt{DELETE}
 \end{itemize}
-The \texttt{PUT} method is used when a resource is overridden, such as when uploading a new profile picture. While the \texttt{PATCH} method is used when the request have the feature of replacing partial data, such as when updating partial user profile information. \texttt{POST} is used when a new resource should be created, such as a new code submission. Currently, for Roaster API v0.0.1, there is no \texttt{DELETE} operation implemented, but one example would be deleting an user or a code submission. The \texttt{GET} and \texttt{HEAD} method should never modify any data.
+The \texttt{PUT} method is used when a resource is overridden, such as when uploading a new profile picture. While the \texttt{PATCH} method is used when the request have the feature of replacing partial data, such as when updating partial user profile information. \texttt{POST} is used when a new resource should be created, such as a new code submission. The \texttt{DELETE} method is used for e.g. removing an user that you are following. The \texttt{GET} and \texttt{HEAD} method should never modify any data.
 
 The Roaster API tries to use clean and logical URI components. The structure uses URI components as categories that are routed to sub-routers in the backend. An example is the \texttt{/user} route, which has several endpoints such as
 \begin{itemize}
@@ -207,15 +208,7 @@ The front end is based on a JavaScript framework called Mithril.js that encourag
   \caption{High level system architecture overview.}
 \end{figure}
 \chapter{API}
-\todo[inline]{
- * Explain how it's RESTful
-    - Examples how the status codes are used
-    - Explanation for choosing some HTTP methods
- * Give some examples
-    - Especially for CSRF
- * Manually writing the whole API blueprint documentation?
-}
-The Roaster API v0.0.1 is fully documented and can be viewed at the following address: \url{https://roast.software/doc/restapi/}.
+The Roaster API v0.0.1 is fully documented and can be viewed at the following address: \url{https://roast.software/doc/restapi/}. The API tries to adhere to the REST principles and is designed around the CRUD pattern, see \hyperref[sec:api-design]{System design - API} for more.
 
 \section{Bootstrap with CSRF mitigation}
 \label{sec:api-bootstrap}
@@ -577,6 +570,8 @@ MySQLTutorial (n.d.) {\em MySQL CHECK Constraint Emulation.} Fetched 2019-01-13,
 
 \bibitem{mariadb-data-integrity}
 Schönig, H. (2017, April 27) {\em Why favor PostgreSQL over MariaDB / MySQL.} Fetched 2019-01-13, from:  \url{https://www.cybertec-postgresql.com/en/why-favor-postgresql-over-mariadb-mysql/#}
+
+\bibitem{fielding-rest} Fielding, R. T. (2000) {\em Representational State Transfer (REST).} Fetched 2019-01-13, from: \url{https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm}.
 
 \end{thebibliography}}
 
