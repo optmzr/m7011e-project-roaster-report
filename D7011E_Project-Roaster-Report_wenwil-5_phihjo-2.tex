@@ -180,6 +180,9 @@ The web application design structure is based on the MVC\footnote{Model View Con
 
 
 \section{Web server (\texttt{roasterd})}
+Code reference/documentation for the \texttt{roasterd} web server (written in Go) can be found here: \url{https://godoc.org/github.com/LuleaUniversityOfTechnology/2018-project-roaster}.
+
+\subsection{HTTP and routing}
 Like the web application the web server is also based on the MVC design pattern. The generic handling of HTTP such as CSRF mitigation, \texttt{Content-Type} checking and CORS policies are implemented according to the middleware pattern. The middleware pattern abstracts parts into layers that are coupled together in a pipeline. At the end of the request chain the route handler that adheres to the MVC pattern handles the request and then sends a response that will go through the same middleware pipeline in the reverse direction, see fig. \ref{fig:roasterd-lifecycle}. The route handlers are defined in the \texttt{router/route}\cite{roaster-router-route} Go package and represents the controller and view in the MVC model. These route handlers talks to the database via the model that is contained in a separate Go package, called \texttt{model}\cite{roaster-model}.
 
 \begin{figure}[H]
@@ -188,6 +191,19 @@ Like the web application the web server is also based on the MVC design pattern.
   \caption{Roasterd web server request and response lifecycle.}
   \label{fig:roasterd-lifecycle}
 \end{figure}
+
+\subsection{Analyzing code}
+Static code analysis is used for grading submitted code. The \texttt{analyze} package implements the methods for each language. Currently only Python 3 is supported using the Flake8 suite and can be accessed through the \texttt{analyze.WithFlake8(...)}\cite{https://godoc.org/github.com/LuleaUniversityOfTechnology/2018-project-roaster/analyze#WithFlake8} method. Any new languages that are added should provide their own \texttt{analyze.With...} method that follows the same interface as \texttt{analyze.WithFlake8}. The interface is defined as:
+\begin{verbatim}
+func(username, code string) (result *model.RoastResult, err error)
+\end{verbatim}
+Where \texttt{username} and \texttt{code} is the input and \texttt{result} and \texttt{code} is the output of the function.
+
+The result from Flake8 is returned and encoded as JSON by the \texttt{flake8-json}\cite{https://pypi.org/project/flake8-json/} formatter. The result is then unmarshalled into an unexported Go struct that follows the same structure as the JSON that \texttt{flake8-json} provides. This unexported struct is then converted into a \texttt{model.RoastResult} that can be saved to the database. The result is then returned to the callee, in this case the \texttt{/roast} route handler.
+
+During development it was discovered that the Flake8 suite was very slow and took several seconds, even for small code snippets. The problem got even worse if a user decided to spam the API with code submissions - the web server would spawn several routines that all analyzed the same code snippet, resulting in a very simple DoS attack. To mitigate the easiest of attacks, and also increase the user experience with faster results, a simple cache was developed.
+
+The cache can be found in the \texttt{analyze/cache}\cite{https://godoc.org/github.com/LuleaUniversityOfTechnology/2018-project-roaster/analyze/cache} package and uses expiration and random replacement when it's filled.
 
 \section{API}
 \label{sec:api-design}
@@ -214,7 +230,8 @@ The whole architecture is intended to be scalable as implemented right now in Am
 The communication between the application server and the databases are not encrypted as of now since they are all hosted in a Virtual Private Cloud (VPC) in AWS and thereby sandboxed. If implementing this on your own data centre or hardware you have to decide on this your self in order to secure the architecture. The application server has support for encrypted communication between both databases. 
 
 The flake8 component that analyzes Python code is executed in the same docker as the application server. This is safe since the flake8 analyzer does not run any code, only parses it.
-The application server has access to local system calls and can thereby start the analyzer. The communication back from the analyzer is encoded in JSON which is very convenient for web application.
+The application server has access to local system calls and can thereby start the analyzer. The communication back from the analyzer is encoded in JSON which is very convenient for web application\todo[inline]{This JSON is never used by the web application and its convenience would be no different even if it was returned as XML - everything is parsed by the analyze package and returned as a Go struct. So I'd say the convenience is that Go has an excellent JSON library (except if you ask Jonas, of course).}.
+lolololol
 
 The front end is based on a JavaScript framework called Mithril.js that encourages modularization and a model component based pattern. This takes advantage of a virtual DOM that utilizes diffing which makes it very fast, and mitigates many security risks like XSS attacks. 
 \begin{figure}[H]
