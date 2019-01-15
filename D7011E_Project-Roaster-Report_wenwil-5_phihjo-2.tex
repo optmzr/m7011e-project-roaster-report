@@ -205,8 +205,25 @@ During development it was discovered that the Flake8 suite was very slow and too
 
 The cache can be found in the \texttt{analyze/cache}\cite{https://godoc.org/github.com/LuleaUniversityOfTechnology/2018-project-roaster/analyze/cache} package and uses expiration and random replacement when it's filled.
 
+\section{Database}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=16cm]{roaster-database-v0_0_1.png}
+  \caption{UML diagram of the Roasterd SQL database design.}
+  \label{fig:roasterd-database}
+\end{figure}
+PostgreSQL domains are utilized for validating the data stored in columns. This can be seen in fig. \ref{fig:roasterd-database} where the \texttt{username} column is of the type \texttt{roaster.username}. This custom domain data type will ensure that not any forbidden characters are in the usernames and that their length is atleast 3 characters and below 255. Similarly there are several other domains defined, such as \texttt{roaster.code}, \texttt{roaster.fullname} and \texttt{roaster.email}. The definitions for these domains can be found in \texttt{doc/postgresql/roaster-database-v0.0.2.sql}\cite{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/blame/master/doc/postgresql/roaster-database-v0.0.2.sql#L6}.
+
+The same file also contains the whole definition of the SQL database used. This file is parsed by a program that can be found in \texttt{cmd/inlinesql}\cite{https://github.com/LuleaUniversityOfTechnology/2018-project-roaster/blob/master/cmd/inlinesql/main.go}. The program will copy each SQL statement into a Go slice (a type of array in Go) that can be used when the web server starts to bootstrap the database with the correct schema setup, this process is also known as \textit{forward engineering}.
+
+The messages (errors and warnings for code submissions) are stored in separate tables using an UUID based on the content of the message as an identifier and primary key to prevent data duplication. Each message is then referenced by each submission result using a many-to-many relationship, e.g. between the \texttt{warning} table and \texttt{roast} table there is a table, \texttt{roast\_has\_warnings} that references each other. UUID is also supported as a data type in PostgreSQL\cite{pg-uuid} allowing for validating the UUID using their built-in constraints.
+
+All user input from the API, except passwords, are validated against the database using its constraints instead of validating the data inside the web server's route handlers or model. This ensures that the actual data model is defined in one place and not spread out through out the application.
+
 \section{API}
 \label{sec:api-design}
+The documentation for the Roaster REST API can be found here: \\ \url{https://roast.software/doc/restapi}.
+
 The Roaster API is designed to adhere to the REST principles and at the same time be secure and support user sessions. A trade off has to be made for the requirement of being stateless in REST\cite{fielding-rest} where both the CSRF mitigation\footnote{Explained below in \hyperref[subsec:csrf]{Security considerations - CSRF}.} and user session requires some state that is kept on the server-side. All API endpoints follow CRUD\footnote{Create, Read, Update, Delete} where the HTTP methods are used to represent each part, in the case of the Roaster API the following rules has been decided:
 \begin{itemize}
     \item Create - \texttt{POST}
@@ -223,6 +240,8 @@ The Roaster API tries to use clean and logical URI components. The structure use
     \item \texttt{/user/\{username\}/followers} - Retrieve a list of followers for \textit{\{username\}}.
 \end{itemize}
 Where the \texttt{/user} sub-router dispatches different handlers depending on the last URI component (e.g. \texttt{/avatar} or \texttt{/followers}) together with the username as a parameter. In the case of \texttt{/user/\{username\}} the sub-router sees the last URI component as \texttt{/}.
+
+The HTTP status codes are used to denote both different successful states and error states. The \texttt{200 - OK} code is returned if the request was successful and there is data to return. While \texttt{204 - No Content} is used when there is no data to return, e.g. after updating a profile picture or when the user has no followers. The status codes can be found in the REST API documentation mentioned above.
 
 \chapter{System architecture}
 The system architecture is designed to be deploy able independently of underlying platform. This led us to containerize the server in order to facilitate the deployment process and avoid installation mishaps. Both the databases are not containerized as there is no gain in doing so.
@@ -315,7 +334,7 @@ Considering the aspects above the developers chose robustness, an SQL database s
 While designing the system, the developers wanted the database to handle objects with strict value types (domains), hence a Object Relational Database (ORD) was desired and PostgreSQL has good support for advanced features for object handling and custom definition of objects. PostgreSQL is also fully ACID compliant\cite{pg-acid} which is desired. PostgreSQL has the ability to use advanced data constraints which enables better robustness. PostgreSQL also has good conformance with the SQL standard\cite{pg-sql-conformance}. PostgreSQL is one of the most advanced and fastest databases\cite{db-benchmark} that is free to use and open source.
 One of the two developers in this project had prior experience with PostgreSQL but only shallow knowledge which also made it interesting as a technology to learn more about.
 
-One of the advanced features PostgreSQL has is its \texttt{HSTORE}, the ability to store sets of key/value pairs within a single PostgreSQL value\cite{pg-hstore}, comparable to an hash table. During the design phase the developers thought this feature would be good to have when storing the messages\footnote{Warnings and errors for Roast submissions.} but as it turns out, it was not necessary. The messages was instead stored in separate tables using a UUID based on the content of the message as an identifier and primary key to prevent data duplication. Each message was then referenced by each submission result using a many-to-many relationship. UUID is also supported as a data type in PostgreSQL\cite{pg-uuid} allowing for validating the UUID using their built-in constraints.
+One of the advanced features PostgreSQL has is its \texttt{HSTORE}, the ability to store sets of key/value pairs within a single PostgreSQL value\cite{pg-hstore}, comparable to an hash table. During the design phase the developers thought this feature would be good to have when storing the messages\footnote{Warnings and errors for Roast submissions.} but as it turns out, it was not necessary.
 
 Competing technologies that we discarded due to the following drawbacks.
 \begin{itemize}
