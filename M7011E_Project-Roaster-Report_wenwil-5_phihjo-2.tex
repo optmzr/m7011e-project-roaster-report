@@ -8,8 +8,8 @@
 \usepackage{fancyhdr}
 \usepackage{titlesec, blindtext, color}
 \usepackage{amsmath}
-\usepackage[square,numbers]{natbib}
-\bibliographystyle{abbrvnat}
+%\usepackage[square,numbers]{natbib}
+%\bibliographystyle{abbrvnat}
 \usepackage{graphicx}
 \usepackage{physics}
 \usepackage{csvsimple}
@@ -33,6 +33,8 @@
 \usepackage{svg}
 \usepackage{lastpage}
 \usepackage{todonotes}
+\usepackage[backend=biber, style=ieee, sorting=ynt, alldates=edtf, seconds=true]{biblatex}
+\addbibresource{sources.bib}
 \usepackage{xcolor}
 \hypersetup{
     colorlinks,
@@ -620,7 +622,7 @@ The only requirements set for passwords are a minimum length of 8 characters and
 In hindsight, the team might have chose a different cloud provider due to complexity in the configuration and maintaining of the service. The cost model is elusive which causes unnecessary re-configurations when choosing a too (cost) expensive configuration. The re-configurations wouldn't be such a problem if it were a more streamlined process and a matter of adjusting a few things in the web interface rather than rebuilding the majority of the environment, which could take hours. The documentation is decent but gives more to ask for when something is not behaving like expected, this made the developers having to resort to unofficial sources for debugging the environment. The logging of the environment could also be better, only outputting logs with scrambled time stamps makes it very hard to read. A cloud provider which offers a simpler service would suffice until the architecture of the site becomes more complex like wanting to run the Python code analyzers as micro services etc.
 
 \section{Mithril.js}
-Mithril.js has been a challenge to work with, accidentally using the documentation for version 2 of Mithril.js whilst actually using Mitril.js version 1. The documentation available is also sparse and not very exhaustive. The community is still small compared to the framework giants like React.js, Angular.js and Vue.js which makes finding good examples that describe advanced maneuvers a lot harder. The source code also has a high grade of coupling that makes modifications to it's inner workings problematic. As an example the developers wanted to extract the CSRF token on XHR responses, but \texttt{m.request} that was provided by Mithril.js skipped the JSON parsing and error handling if the developer provided their own \textit{extract} function. Due to the too high coupling in the Mithril.js implementation it was not possible to re-use their own logic and the developers had to re-implement the same functionality themselves.
+Mithril.js has been a challenge to work with, accidentally using the documentation for version 2 of Mithril.js whilst actually using Mithril.js version 1. The documentation available is also sparse and not very exhaustive. The community is still small compared to the framework giants like React.js, Angular.js and Vue.js which makes finding good examples that describe advanced maneuvers a lot harder. The source code also has a high grade of coupling that makes modifications to it's inner workings problematic. As an example the developers wanted to extract the CSRF token on XHR responses, but \texttt{m.request} that was provided by Mithril.js skipped the JSON parsing and error handling if the developer provided their own \textit{extract} function. Due to the too high coupling in the Mithril.js implementation it was not possible to re-use their own logic and the developers had to re-implement the same functionality themselves.
 
 The design pattern with components that is enforced by the framework was clearly document when writing untyped JavaScript code. However, the examples for writing the same code with typed TypeScript was either missing or was written in an experimental style that the authors of the framework tried. This led the developers to also try several different code styles during the project. Several of these style can still be found in the project, some with lower readability. The developers are still unsure what style to use, but no matter what, a re-factoring of several components, views and models is required.
 
@@ -718,7 +720,8 @@ Tracked in issue: \href{https://github.com/LuleaUniversityOfTechnology/2018-proj
 \newpage
 \apptocmd{\sloppy}{\hbadness 10000\relax}{}{}
 
-\bibliography{sources}
+%\bibliography{sources}
+\printbibliography
 
 \begin{appendix}
     \chapter{Setup and install manual}
